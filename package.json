@@ -1,0 +1,23 @@
+{
+  "name": "chartstocks",
+  "version": "1.0.0",
+  "description": "Charting the Stock Market",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kunal Yadav",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "*",
+    "express-handlebars": "^3.0.0",
+    "express-messages": "*",
+    "express-session": "*",
+    "express-validator": "^3.2.0",
+    "mongodb": "^2.2.29",
+    "mongoose": "^4.11.1",
+    "request": "^2.81.0",
+    "socket.io": "^2.0.3"
+  }
+}
