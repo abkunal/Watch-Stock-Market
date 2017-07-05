@@ -10,9 +10,10 @@ var http = require('http').Server(app);
 var request = require("request");
 var io = require("socket.io")(http);
 
-mongoose.connect("mongodb://abkunal:abkunalMlab@ds127132.mlab.com:27132/backend");
+mongoose.connect("mongodb://localhost/chartStocks");
 var db = mongoose.connection;
 
+// database schema
 var Stock = require("./models/stocks");
 
 // Routes
@@ -25,16 +26,19 @@ app.set("view engine", "handlebars");
 
 app.use(express.static(path.join(__dirname, "/public")));
 
-//require("./socket")(http);
-
 io.on('connection', function(socket) {
+	console.log("A user connected");
 
 	var stockCodeList = [];
+
+	// When a user makes the connection for the first time, send stock data 
+	// stored in database to client
 	Stock.getAllStocks(function(err, stocks) {
 		if (err) throw err;
 
 		console.log(stocks);
 		if (stocks != []) {
+			
 			for (let i in stocks) {
 				stockCodeList.push(stocks[i].code);
 				request({
@@ -42,7 +46,6 @@ io.on('connection', function(socket) {
 					url: "https://www.alphavantage.co/query?" + 
 					"function=TIME_SERIES_MONTHLY&symbol=" + stocks[i].code +
 					"&apikey=FJYHHOJC0F72H1GC"
-					// You can get your free API key from alphavantage.co
 				}, function(error, response, body) {
 					body = JSON.parse(body);
 					body.sofar = stockCodeList;
@@ -52,7 +55,7 @@ io.on('connection', function(socket) {
 		}
 	});
 
-	console.log("A user connected");
+	// user has entered a stock code
 	socket.on('stock code', function(code) {
 		console.log(code);
 		request({
@@ -62,8 +65,6 @@ io.on('connection', function(socket) {
 				"&apikey=FJYHHOJC0F72H1GC"
 		}, function(error, response, body) {
 			body = JSON.parse(body);
-			console.log(code);
-			console.log("BODY: ", body["Meta Data"]["2. Symbol"]);
 
 			// if stock code is invalid, inform the user who entered it
 			if (body["Error Message"]) {
@@ -72,21 +73,26 @@ io.on('connection', function(socket) {
 			}
 			// if stock code is valid, send to all users
 			else {
-				code[1].push(code[0]);
-				body.sofar = code[1];
-				io.emit('stock code', body);	
+				let index = stockCodeList.indexOf(code[0]);
+				if (index == -1) {
+					stockCodeList = code[0];
+					body.sofar = code[1];
+					io.emit('stock code', body);	
 
-				//
-				let newStock = new Stock({code: code[0]});
-				Stock.addStock(newStock, (err, msg) => {
-					if (err) throw err;
-					console.log(msg);
-				});
+
+					let newStock = new Stock({code: code[0]});
+					Stock.addStock(newStock, (err, msg) => {
+						if (err) throw err;
+						console.log(msg);
+					});
+				}
+				
 			}
 
 		});
 	});
 
+	// user has deleted a stock
 	socket.on('deleteStock', (response) => {
 		console.log("ID: ",response[0]);
 		console.log("List: ", response[1]);
@@ -97,7 +103,7 @@ io.on('connection', function(socket) {
 
 		Stock.deleteStock(response[0], (err, msg) => {
 			if (err) throw err;
-			//console.log(msg);
+			console.log(msg);
 		});
 
 

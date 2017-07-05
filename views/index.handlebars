@@ -1,8 +1,9 @@
 
-	<h1 class="center">Real Time Stock Data</h1>
+	<h1 class="center">Monthly Stock Analysis</h1>
 	<div class="container">
 		<div class="row">
 			<canvas id="canvas"></canvas>
+			<h2 class="center">Add a stock to See Analysis</h2>
 			<div id="main">
 				
 			</div><br>
@@ -31,11 +32,13 @@
 	<script type="text/javascript" src="https://momentjs.com/downloads/moment.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script> 
 	<script type="text/javascript">
+
 		function template(name) {
+			/* Adds a new alert div for the given stock */
 			let a = " <br><div class='stockCode alert alert-dismissible ' role='alert'>" +
 				'<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
 				'<span id=' + name +' class="selectIt" aria-hidden="true">&times;</span></button>' +
-				"<h3 class='stockName'>"+ name +"</h3><br><p> " +
+				"<h3 class='stockName'>"+ name.toUpperCase() +"</h3><br><p> " +
 				"Prices, Dividends, Splits and Trading Volume</p>" +
 				"</div>";
 			console.log("worked");
@@ -70,7 +73,7 @@
 				for (let i in chartData) {
 					let col = chartColors[colors[i %colors.length]];
 					let obj = {
-						label: chartData[i].label, 
+						label: chartData[i].label.toUpperCase(), 
 						data: chartData[i].data,
 						backgroundColor: col,
 						borderColor: col,
@@ -116,8 +119,10 @@
 		                        }
 		                    }]
 		                }
-            }
+            		}
 				};
+
+				$("h2.center").html("");
 				if (myChart) {
 					myChart.destroy();
 
@@ -135,6 +140,16 @@
 			var stockCount = 0;
 			// TEST END
 
+			// EMPTY CHART START
+			function deleteChart() {
+				if (myChart) {
+					myChart.destroy();
+				}
+				$("h2.center").html("Add a stock to See Analysis");
+			}
+			//debugger;
+			// EMPTY CHART END
+
 
 			var list = [];
 		    var socket = io();
@@ -142,9 +157,22 @@
 		    // send request to include the stock
 		    $('form').submit(function(){
 
-		      socket.emit('stock code', [$('#stockField').val(), list]);
-		      $('#stockField').val('');
-		      return false;
+		    	let code = $("#stockField").val();
+		    	let isPresent = false;
+		    	list = [];
+		    	for (let i in chartData) {
+		    		if (chartData[i].label == code) {
+		    			isPresent = true;
+		    		}
+		    		list.push(chartData[i].label);
+		    	}
+
+
+		    	if (!isPresent) {
+			    	socket.emit('stock code', [$('#stockField').val().toLowerCase(), list]); 		
+		    	}
+		     	$('#stockField').val('');
+				return false;
 		    });
 
 		    // stock infromation received, if no erorr is found, add the
@@ -155,7 +183,6 @@
 		    	}
 		    	else {
 		    		stockCount++;
-		    		console.log(stockCount);
 
 			    	chartingData = stockInfo["Monthly Time Series"];
 			    	list = stockInfo.sofar;
@@ -183,10 +210,16 @@
 			      	let data = {label: label, date: date, data: stockPrice};
 			      	chartData.push(data);
 			      	
-			      	if (chartData.length == stockCount) {
-			      		console.log(chartData.length, list.length);
-			      		drawChart(chartData);
+			      	if (stockCount == 0) {
+			      		deleteChart();
 			      	}
+			      	else {
+				      	if (chartData.length == stockCount) {
+				      		console.log(chartData.length, list.length);
+				      		drawChart(chartData);
+				      	}	
+			      	}
+			      	
 		      	}
 			});
 
@@ -215,6 +248,10 @@
 
 		    		chartData.splice(index, 1);
 			    	drawChart(chartData);
+		    	}
+
+		    	if (stockCount == 0) {
+		    		deleteChart();
 		    	}
 		    });
 
@@ -250,6 +287,10 @@
 			    		chartData.splice(index, 1);
 				    	drawChart(chartData);
 			    	}
+
+			    	if (stockCount == 0) {
+		    			deleteChart();
+		    		}
 
 			    }
 			});

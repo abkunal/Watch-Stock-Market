@@ -1,7 +1,7 @@
 var mongoose = require("mongoose");
 
 var StockSchema = mongoose.Schema({
-	code: String
+	code: {type: String}
 });
 
 var Stock = module.exports = mongoose.model("stock", StockSchema);
