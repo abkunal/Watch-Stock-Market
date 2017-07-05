@@ -10,7 +10,7 @@ var http = require('http').Server(app);
 var request = require("request");
 var io = require("socket.io")(http);
 
-mongoose.connect("mongodb://abkunal:abkunalMlab@ds127132.mlab.com:27132/backend");
+mongoose.connect("mongodb://localhost/chartStocks");
 var db = mongoose.connection;
 
 // database schema
@@ -45,7 +45,8 @@ io.on('connection', function(socket) {
 					method: "GET",
 					url: "https://www.alphavantage.co/query?" + 
 					"function=TIME_SERIES_MONTHLY&symbol=" + stocks[i].code +
-					"&apikey=FJYHHOJC0F72H1GC"
+					"&apikey=API_KEY"
+					// you can get your API key from alphavantage.co
 				}, function(error, response, body) {
 					body = JSON.parse(body);
 					body.sofar = stockCodeList;
@@ -62,7 +63,7 @@ io.on('connection', function(socket) {
 			method: "GET", 
 			url: "https://www.alphavantage.co/query?" + 
 				"function=TIME_SERIES_MONTHLY&symbol=" + code[0] +
-				"&apikey=FJYHHOJC0F72H1GC"
+				"&apikey=API_KEY"
 		}, function(error, response, body) {
 			body = JSON.parse(body);
 
