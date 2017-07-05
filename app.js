@@ -10,7 +10,7 @@ var http = require('http').Server(app);
 var request = require("request");
 var io = require("socket.io")(http);
 
-mongoose.connect("mongodb://localhost/chartStocks");
+mongoose.connect("mongodb://abkunal:abkunalMlab@ds127132.mlab.com:27132/backend");
 var db = mongoose.connection;
 
 // database schema
